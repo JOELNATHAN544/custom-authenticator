@@ -66,3 +66,26 @@ This confirms the SPI executed and allowed the flow to proceed.
 
 - The provider is registered via `META-INF/services/org.keycloak.authentication.AuthenticatorFactory`.
 - Built against Keycloak 24.x (Quarkus distribution), Java 17.
+
+graph TD
+    subgraph "Keycloak Core"
+        KC[Keycloak IAM Server] -->|Uses extensibility points via| SPI[SPI Interfaces\n\(e.g., Authenticator, UserStorageProvider\)]
+        SPI -->|Loaded dynamically at runtime using| SL[Java ServiceLoader]
+    end
+
+    subgraph "Custom Extension Development"
+        DEV[Developer] -->|1. Identifies SPI to extend\n\(e.g., Authentication SPI\)| IMP[2. Implements Provider\nand ProviderFactory interfaces]
+        IMP -->|3. Creates META-INF/services/\nconfiguration file| BUILD[4. Builds JAR with dependencies\n\(e.g., keycloak-services\)]
+    end
+
+    subgraph "Deployment and Integration"
+        BUILD -->|5. Deploys JAR to\nKeycloak's /providers/ directory| DEP[6. Keycloak rebuilds and starts\n\(e.g., bin/kc.sh build\)]
+        DEP -->|7. Configures provider\n\(CLI, Admin Console, or realm settings\)| RUN[8. Runtime Usage:\nKeycloak calls custom provider\nvia KeycloakSession]
+    end
+
+    KC -->|Relies on for modularity| SPI
+    SL -->|Discovers and registers| IMP
+    RUN -->|Enables custom functionality\n\(e.g., custom auth, user federation\)| KC
+
+    style KC fill:#f9f,stroke:#333
+    style SPI fill:#bbf,stroke:#333
